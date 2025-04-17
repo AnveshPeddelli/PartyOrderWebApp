@@ -188,17 +188,16 @@
     });
   }
 
-  function showFinalOrder() {
-    document.getElementById('order-section').style.display = 'none';
-    document.getElementById('final-order').style.display = 'block';
-    let summary = '';
-    groups.forEach((group, i) => {
-      const order = document.getElementById(`order_${i}`).value;
-      summary += `${group.join(', ')}: ${order}\n\n`;
-    });
-    document.getElementById('orderSummary').innerText = summary;
-  }
-
+ function showFinalOrder() {
+  document.getElementById('order-section').style.display = 'none';
+  document.getElementById('final-order').style.display = 'block';
+  let summary = '';
+  groups.forEach((group, i) => {
+    const order = document.getElementById(`order_${i}`).value;
+    summary += `${group.join(', ')}:\n${order}\n\n`;
+  });
+  document.getElementById('orderSummary').innerText = summary;
+}
   function editOrder(index) {
     document.getElementById('final-order').style.display = 'none';
     document.getElementById('order-section').style.display = 'block';
