@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Party Order Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f7f9;
+      padding: 40px;
+      color: #333;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    .section {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      margin-bottom: 40px;
+    }
+
+    input, button, textarea {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    input[type="text"] {
+      width: 250px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    ul {
+      margin-top: 10px;
+      margin-bottom: 20px;
+      list-style-type: disc;
+      padding-left: 20px;
+    }
+
+    .group-box {
+      border: 1px solid #e1e4e8;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      resize: vertical;
+      margin-top: 10px;
+    }
+
+    #orderSummary {
+      background-color: #ecf0f1;
+      padding: 20px;
+      border-radius: 10px;
+      white-space: pre-wrap;
+    }
+
+    .edit-btn {
+      margin-top: 10px;
+      background-color: #f39c12;
+    }
+
+    .edit-btn:hover {
+      background-color: #d68910;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="section" id="guest-section">
+    <h2>Step 1: Enter Guest Names</h2>
+    <input type="text" id="guestName" placeholder="Enter guest name">
+    <button id="addGuestBtn">Add Guest</button>
+    <ul id="guestList"></ul>
+    <button id="goToGroupingBtn">Next: Create Groups</button>
+  </div>
+
+  <div class="section" id="group-section" style="display:none">
+    <h2>Step 2: Create Groups or Individuals</h2>
+    <div id="groupForm"></div>
+    <button id="finalizeGroupsBtn">Next: Enter Orders</button>
+  </div>
+
+  <div class="section" id="order-section" style="display:none">
+    <h2>Step 3: Enter Orders</h2>
+    <div id="orderForm"></div>
+    <button id="showFinalOrderBtn">Finish & Show Final Order</button>
+  </div>
+
+  <div class="section" id="final-order" style="display:none">
+    <h2>Final Order Summary</h2>
+    <pre id="orderSummary"></pre>
+  </div>
+
+<script>
+  let guests = [];
+  let groups = [];
+
+  function addGuest() {
+    const name = document.getElementById('guestName').value.trim();
+    if (name && !guests.includes(name)) {
+      guests.push(name);
+      document.getElementById('guestList').innerHTML += `<li>${name}</li>`;
+      document.getElementById('guestName').value = '';
+    }
+  }
+
+  function goToGrouping() {
+    document.getElementById('guest-section').style.display = 'none';
+    document.getElementById('group-section').style.display = 'block';
+    const groupForm = document.getElementById('groupForm');
+    groupForm.innerHTML = '';
+
+    guests.forEach((guest, index) => {
+      groupForm.innerHTML += `<input type="checkbox" id="chk_${index}" value="${guest}"> ${guest}<br>`;
+    });
+
+    const createGroupBtn = document.createElement('button');
+    createGroupBtn.textContent = 'Create Group from Selected';
+    createGroupBtn.addEventListener('click', createGroup);
+    groupForm.appendChild(createGroupBtn);
+
+    const groupsDisplay = document.createElement('div');
+    groupsDisplay.id = 'groupsDisplay';
+    groupForm.appendChild(groupsDisplay);
+  }
+
+  function createGroup() {
+    const selected = [];
+    guests.forEach((guest, index) => {
+      if (document.getElementById(`chk_${index}`).checked) {
+        selected.push(guest);
+        document.getElementById(`chk_${index}`).checked = false;
+      }
+    });
+    if (selected.length > 0) {
+      groups.push(selected);
+      document.getElementById('groupsDisplay').innerHTML += `<div class="group-box">Group: ${selected.join(', ')}</div>`;
+    }
+  }
+
+  function finalizeGroups() {
+    const addedGuests = groups.flat();
+    guests.forEach(g => {
+      if (!addedGuests.includes(g)) {
+        groups.push([g]);
+      }
+    });
+
+    document.getElementById('group-section').style.display = 'none';
+    document.getElementById('order-section').style.display = 'block';
+    const orderForm = document.getElementById('orderForm');
+
+    groups.forEach((group, i) => {
+      orderForm.innerHTML += `
+        <div class="group-box">
+          <strong>${group.length > 1 ? 'Group' : 'Person'}: ${group.join(', ')}</strong><br>
+          <textarea id="order_${i}" rows="3" placeholder="Enter order..."></textarea><br>
+          <button class="edit-btn" onclick="editOrder(${i})">Edit Order</button>
+        </div>
+      `;
+    });
+  }
+
+  function showFinalOrder() {
+    document.getElementById('order-section').style.display = 'none';
+    document.getElementById('final-order').style.display = 'block';
+    let summary = '';
+    groups.forEach((group, i) => {
+      const order = document.getElementById(`order_${i}`).value;
+      summary += `${group.join(', ')}: ${order}\n\n`;
+    });
+    document.getElementById('orderSummary').innerText = summary;
+  }
+
+  function editOrder(index) {
+    document.getElementById('final-order').style.display = 'none';
+    document.getElementById('order-section').style.display = 'block';
+    document.getElementById(`order_${index}`).focus();
+  }
+
+  document.getElementById('addGuestBtn').addEventListener('click', addGuest);
+  document.getElementById('goToGroupingBtn').addEventListener('click', goToGrouping);
+  document.getElementById('finalizeGroupsBtn').addEventListener('click', finalizeGroups);
+  document.getElementById('showFinalOrderBtn').addEventListener('click', showFinalOrder);
+</script>
+
+</body>
+</html>
